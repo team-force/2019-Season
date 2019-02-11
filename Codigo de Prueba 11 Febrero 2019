@@ -1,0 +1,58 @@
+package frc.robot;
+
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.TimedRobot;
+
+/**
+ * This is a demo program showing the use of the RobotDrive class, specifically
+ * it contains the code necessary to operate a robot with tank drive.
+ */
+public class Robot extends TimedRobot {
+  private Joystick driverJoystick, armJoystick;
+  private TalonSRX leftFrontTalon, rightFrontTalon, leftBackTalon, rightBackTalon, armTalon;
+
+  @Override
+  public void robotInit(){
+    leftFrontTalon = new TalonSRX(4);
+    leftBackTalon = new TalonSRX(1);
+    rightFrontTalon = new TalonSRX(3);
+    rightBackTalon = new TalonSRX(2);
+    armTalon = new TalonSRX(5);
+    driverJoystick = new Joystick(0);
+    armJoystick = new Joystick(2);
+
+  }
+
+  @Override
+  public void teleopInit() {
+    leftFrontTalon.set(ControlMode.PercentOutput, 0);
+    leftBackTalon.set(ControlMode.PercentOutput, 0);
+    rightFrontTalon.set(ControlMode.PercentOutput, 0);
+    rightBackTalon.set(ControlMode.PercentOutput, 0);
+    armTalon.set(ControlMode.PercentOutput, 0);
+  }
+
+  //Base code
+  @Override
+  public void teleopPeriodic() {
+    double rightTank =  driverJoystick.getRawAxis(5)* -1;
+    double leftTank =  driverJoystick.getRawAxis(1);
+    double armTank = armJoystick.getRawAxis(5) * -1;
+
+
+    rightFrontTalon.set(ControlMode.PercentOutput, rightTank);
+    rightBackTalon.set(ControlMode.PercentOutput, rightTank);
+    leftFrontTalon.set(ControlMode.PercentOutput, leftTank);
+    leftBackTalon.set(ControlMode.PercentOutput, leftTank);
+    armTalon.set(ControlMode.PercentOutput, armTank);
+
+
+
+    }
+
+  }
+
+
