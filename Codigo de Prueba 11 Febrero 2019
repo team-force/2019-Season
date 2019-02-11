@@ -4,15 +4,37 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import edu.wpi.first.wpilibj.TimedRobot;
-
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 /**
  * This is a demo program showing the use of the RobotDrive class, specifically
  * it contains the code necessary to operate a robot with tank drive.
  */
+
 public class Robot extends TimedRobot {
+  
   private Joystick driverJoystick, armJoystick;
+  private JoystickButton CIRCLE, SQUARE, TRIANGLE;
   private TalonSRX leftFrontTalon, rightFrontTalon, leftBackTalon, rightBackTalon, armTalon;
+  private Encoder encoder;
+  private DoubleSolenoid solenoid1, solenoid2;
+  private final int LEFT_JOYSTICK = 1;
+  private final int RIGHT_JOYSTICK = 5;
+
+  // //butttons
+  // private final int CIRCLE = 2;
+  // private final int SQUARE = 3;
+  // private final int TRIANGLE = 4;
+  // //back buttons R y L
+  // private final int L1 = 5;
+  // private final int R1 = 6;
+  // //back axis
+  // private final int L2 = 2;
+  // private final int R2 = 3;
+  // //Axis buttons
+  // private final int LEFT_BUTTON = 9;
+  // private final int RIGHT_BUTTON = 10;
 
   @Override
   public void robotInit(){
@@ -21,8 +43,16 @@ public class Robot extends TimedRobot {
     rightFrontTalon = new TalonSRX(3);
     rightBackTalon = new TalonSRX(2);
     armTalon = new TalonSRX(5);
+
     driverJoystick = new Joystick(0);
     armJoystick = new Joystick(2);
+
+    CIRCLE = new JoystickButton(driverJoystick, 2);
+    SQUARE = new JoystickButton(driverJoystick, 3);
+    TRIANGLE = new JoystickButton(driverJoystick, 4);
+
+    solenoid1 = new DoubleSolenoid(1, 2);
+    solenoid2 = new DoubleSolenoid(1, 2);
 
   }
 
@@ -33,6 +63,11 @@ public class Robot extends TimedRobot {
     rightFrontTalon.set(ControlMode.PercentOutput, 0);
     rightBackTalon.set(ControlMode.PercentOutput, 0);
     armTalon.set(ControlMode.PercentOutput, 0);
+    
+
+    solenoid1.set(DoubleSolenoid.Value.k0ff);
+    solenoid1.set(DoubleSolenoid.Value.kForward);
+    solenoid1.set(DoubleSolenoid.Value.kReverse);
   }
 
   //Base code
@@ -41,6 +76,8 @@ public class Robot extends TimedRobot {
     double rightTank =  driverJoystick.getRawAxis(5)* -1;
     double leftTank =  driverJoystick.getRawAxis(1);
     double armTank = armJoystick.getRawAxis(5) * -1;
+    double controlSolenoids1 = driverJoystick.getRawAxis(4);
+    double controlSolenoids2 = driverJoystick.getRawAxis(2);
 
 
     rightFrontTalon.set(ControlMode.PercentOutput, rightTank);
@@ -49,10 +86,13 @@ public class Robot extends TimedRobot {
     leftBackTalon.set(ControlMode.PercentOutput, leftTank);
     armTalon.set(ControlMode.PercentOutput, armTank);
 
+    solenoid1.set(ControlMode.PercentOutput, controlSolenoids1);
+    solenoid2.set(ControlMode.PercentOutput, controlSolenoids2);
+
+  
+
 
 
     }
 
   }
-
-
