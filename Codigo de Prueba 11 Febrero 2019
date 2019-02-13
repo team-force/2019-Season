@@ -1,98 +1,188 @@
 package frc.robot;
 
+import java.util.Calendar;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
+
+import edu.wpi.cscore.CvSink;
+import edu.wpi.cscore.CvSource;
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.buttons.JoystickButton;
+import edu.wpi.first.wpilibj.PIDController;
+import edu.wpi.first.wpilibj.SpeedController;
+import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.CounterBase.EncodingType;
+import edu.wpi.first.wpilibj.buttons.Button;
+import edu.wpi.first.wpilibj.buttons.JoystickButton;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import frc.robot.Robot;
+
+
 /**
+
  * This is a demo program showing the use of the RobotDrive class, specifically
+
  * it contains the code necessary to operate a robot with tank drive.
+
  */
 
 public class Robot extends TimedRobot {
-  
-  private Joystick driverJoystick, armJoystick;
-  private JoystickButton CIRCLE, SQUARE, TRIANGLE;
-  private TalonSRX leftFrontTalon, rightFrontTalon, leftBackTalon, rightBackTalon, armTalon;
-  private Encoder encoder;
-  private DoubleSolenoid solenoid1, solenoid2;
+
+
+
+  private Encoder leftEncoder;
+  private TalonSRX armTalon;
+  //private DigitalInput limitSwitchUp, limitSwitchDown;
+  private Joystick driverArm;
+  private long time1;
+  private final double maxVelocity = 0.8;
+
+  //private PIDController HombroControl;
+  //private JoystickButton level1, level2, level3;
+
   private final int LEFT_JOYSTICK = 1;
+
   private final int RIGHT_JOYSTICK = 5;
 
-  // //butttons
-  // private final int CIRCLE = 2;
-  // private final int SQUARE = 3;
-  // private final int TRIANGLE = 4;
-  // //back buttons R y L
-  // private final int L1 = 5;
-  // private final int R1 = 6;
-  // //back axis
-  // private final int L2 = 2;
-  // private final int R2 = 3;
-  // //Axis buttons
-  // private final int LEFT_BUTTON = 9;
-  // private final int RIGHT_BUTTON = 10;
+  //butttons
+
+  private final int CIRCLE = 2;
+
+  private final int SQUARE = 3;
+
+  private final int TRIANGLE = 4;
+
+  //back buttons R y L
+
+  private final int L1 = 5;
+
+  private final int R1 = 6;
+
+  //back axis
+
+  private final int L2 = 2;
+
+  private final int R2 = 3;
+
+  //Axis buttons
+
+  private final int LEFT_BUTTON = 9;
+
+  private final int RIGHT_BUTTON = 10;
+
+  private double E_k = 0;
+  // private double e_k_1 = 0;
+
+  private double Kp, Ki; 
+  private double setPoint;
+  private boolean PIDEnabled = false;
 
   @Override
+
   public void robotInit(){
-    leftFrontTalon = new TalonSRX(4);
-    leftBackTalon = new TalonSRX(1);
-    rightFrontTalon = new TalonSRX(3);
-    rightBackTalon = new TalonSRX(2);
-    armTalon = new TalonSRX(5);
+    leftEncoder = new Encoder(0, 1, false, EncodingType.k4X);
+    armTalon = new TalonSRX(2);
+    driverArm = new Joystick(0);
 
-    driverJoystick = new Joystick(0);
-    armJoystick = new Joystick(2);
+    //level2 = new JoystickButton(driverCargo, 3);
+    //level3 = new JoystickButton(driverCargo, 4);
 
-    CIRCLE = new JoystickButton(driverJoystick, 2);
-    SQUARE = new JoystickButton(driverJoystick, 3);
-    TRIANGLE = new JoystickButton(driverJoystick, 4);
-
-    solenoid1 = new DoubleSolenoid(1, 2);
-    solenoid2 = new DoubleSolenoid(1, 2);
-
+    //HombroControl = new PIDController(0.025, 0.0, 0.0, leftEncoder, armTalon);
   }
-
-  @Override
-  public void teleopInit() {
-    leftFrontTalon.set(ControlMode.PercentOutput, 0);
-    leftBackTalon.set(ControlMode.PercentOutput, 0);
-    rightFrontTalon.set(ControlMode.PercentOutput, 0);
-    rightBackTalon.set(ControlMode.PercentOutput, 0);
-    armTalon.set(ControlMode.PercentOutput, 0);
-    
-
-    solenoid1.set(DoubleSolenoid.Value.k0ff);
-    solenoid1.set(DoubleSolenoid.Value.kForward);
-    solenoid1.set(DoubleSolenoid.Value.kReverse);
-  }
-
-  //Base code
-  @Override
-  public void teleopPeriodic() {
-    double rightTank =  driverJoystick.getRawAxis(5)* -1;
-    double leftTank =  driverJoystick.getRawAxis(1);
-    double armTank = armJoystick.getRawAxis(5) * -1;
-    double controlSolenoids1 = driverJoystick.getRawAxis(4);
-    double controlSolenoids2 = driverJoystick.getRawAxis(2);
-
-
-    rightFrontTalon.set(ControlMode.PercentOutput, rightTank);
-    rightBackTalon.set(ControlMode.PercentOutput, rightTank);
-    leftFrontTalon.set(ControlMode.PercentOutput, leftTank);
-    leftBackTalon.set(ControlMode.PercentOutput, leftTank);
-    armTalon.set(ControlMode.PercentOutput, armTank);
-
-    solenoid1.set(ControlMode.PercentOutput, controlSolenoids1);
-    solenoid2.set(ControlMode.PercentOutput, controlSolenoids2);
-
   
 
 
+  @Override
 
+  public void teleopInit() {
+
+    armTalon.set(ControlMode.PercentOutput, 0);
+    // SpeedControllerGroup spped = new SpeedControllerGroup(armTalon);
+
+    leftEncoder.setMaxPeriod(0.1);
+    leftEncoder.setMinRate(10);
+    leftEncoder.setDistancePerPulse((Math.PI*(8.0/12.0))/7.0);
+    leftEncoder.setReverseDirection(false);
+    leftEncoder.setSamplesToAverage(7);
+
+    leftEncoder.reset();
+    time1 = Calendar.getInstance().getTimeInMillis();
+
+    E_k = 0;
+    // e_k_1 = 0;
+
+    Ki = 0.010;
+    Kp = 0.025;
+    setPoint = 0.0001;
+    
+   }
+
+
+
+  @Override
+
+  public void teleopPeriodic() {
+    long time2 = Calendar.getInstance().getTimeInMillis();
+    double delta = (time2 - time1)/1000.0;
+    time1 = time2;
+
+    int countL = leftEncoder.get();
+    double rawL = leftEncoder.getRaw();
+    double distanceL = leftEncoder.getDistance();
+    double rateL = leftEncoder.getRate();
+    boolean stoppedL = leftEncoder.getStopped();
+
+    SmartDashboard.putNumber("Left count ", countL);
+    SmartDashboard.putNumber("Left distance ", distanceL);
+    SmartDashboard.putNumber("Raw value left", rawL);
+    SmartDashboard.putNumber("Left Rater ", rateL);
+    SmartDashboard.putBoolean("Left stopped ", stoppedL);
+
+    double upDownArm =  driverArm.getRawAxis(RIGHT_JOYSTICK) * 0.5;
+    if(!PIDEnabled) armTalon.set(ControlMode.PercentOutput, upDownArm);
+
+    if (driverArm.getRawButtonPressed(CIRCLE)){
+      leftEncoder.reset();
+      E_k = 0; 
     }
 
+    if (driverArm.getRawButtonPressed(TRIANGLE)){
+      PIDEnabled = !PIDEnabled;
+    }
+    double v = 0;
+
+    if (PIDEnabled){
+      // PID
+      // Leer el setpoint
+      double e_k = setPoint - rawL;
+      double e_P = e_k;
+      double e_I = E_k + e_k*delta;
+      
+      v = Kp*e_P + Ki*e_I;
+
+      v = Math.min(Math.max(-maxVelocity, v), maxVelocity);
+      E_k = e_I;
+      armTalon.set(ControlMode.PercentOutput, -v);
+    }
+    // if (Math.abs(rawL) > 35){
+    //   armTalon.set(ControlMode.PercentOutput, 0.0);
+    // }
+    
+    SmartDashboard.putNumber("Motor Output ", v);
+    SmartDashboard.putNumber("Motor Manual ", upDownArm);
+    SmartDashboard.putNumber("Integrador ", E_k);
+    SmartDashboard.putBoolean("PID", PIDEnabled);
+
   }
+
+
+}
