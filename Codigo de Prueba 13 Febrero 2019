@@ -24,7 +24,7 @@ public class Robot extends TimedRobot {
   // private JoystickButton CIRCLE, SQUARE, TRIANGLE;
   private TalonSRX leftFrontTalon, rightFrontTalon, leftBackTalon, rightBackTalon, armTalon;
   private DoubleSolenoid elevateSolenoid, wheelsSolenoid, cambioVelocidad;
-  private Encoder encoder;
+  private Encoder encoder, encoderLeft, encoderRight;
   private long time1;
   private double Kp, Ki;
   private double E_k = 0;
@@ -61,14 +61,16 @@ public class Robot extends TimedRobot {
     armTalon = new TalonSRX(5);
 
     driverJoystick = new Joystick(0);
-    // armJoystick = new Joystick(1);
+    armJoystick = new Joystick(2);
 
     compressor = new Compressor(0);
     elevateSolenoid = new DoubleSolenoid(0, 1);
     wheelsSolenoid = new DoubleSolenoid(3, 2);
-    cambioVelocidad = new DoubleSolenoid(4, 5);
+    cambioVelocidad = new DoubleSolenoid(6, 7);
     
     encoder = new Encoder(0, 1, false, Encoder.EncodingType.k4X);
+    encoderRight = new Encoder(8, 9, false, Encoder.EncodingType.k4X); 
+    encoderLeft = new Encoder(6, 7, false, Encoder.EncodingType.k4X);
 
   }
 
@@ -96,6 +98,18 @@ public class Robot extends TimedRobot {
     encoder.setReverseDirection(false);
     encoder.setSamplesToAverage(7);
 
+    encoderRight.setMaxPeriod(0.1);
+    encoderRight.setMinRate(10);
+    encoderRight.setDistancePerPulse((Math.PI*(8.0/12.0))/7.0);
+    encoderRight.setReverseDirection(false);
+    encoderRight.setSamplesToAverage(7);
+
+    encoderLeft.setMaxPeriod(0.1);
+    encoderLeft.setMinRate(10);
+    encoderLeft.setDistancePerPulse((Math.PI*(8.0/12.0))/7.0);
+    encoderLeft.setReverseDirection(false);
+    encoderLeft.setSamplesToAverage(7);
+
     encoder.reset();
     time1 = Calendar.getInstance().getTimeInMillis();
 
@@ -112,11 +126,11 @@ public class Robot extends TimedRobot {
     double rightTank =  driverJoystick.getRawAxis(5)* -1;
     double leftTank =  driverJoystick.getRawAxis(1);
     double driverArm = armJoystick.getRawAxis(5) * -1;
-    boolean solenoid1Control = driverJoystick.getRawButtonPressed(2);
-    boolean solenoid2Control = driverJoystick.getRawButtonPressed(3);
+    boolean wheelsSolenoides = driverJoystick.getRawButton(1);
+    boolean elevateSolenoides = driverJoystick.getRawButton(2);
+    boolean transmision = driverJoystick.getRawButton(3);
 
-
-
+  
     rightFrontTalon.set(ControlMode.PercentOutput, rightTank);
     rightBackTalon.set(ControlMode.PercentOutput, rightTank);
     leftFrontTalon.set(ControlMode.PercentOutput, leftTank);
@@ -124,23 +138,30 @@ public class Robot extends TimedRobot {
     armTalon.set(ControlMode.PercentOutput, driverArm);
 
     //solenoides control
-    if(driverJoystick.getRawButton(1)){
-      // wheelsSolenoid.set(DoubleSolenoid.Value.kReverse);
-        elevateSolenoid.set(DoubleSolenoid.Value.kReverse);
+    if(wheelsSolenoides == true){
+        wheelsSolenoid.set(DoubleSolenoid.Value.kReverse);
+        //elevateSolenoid.set(DoubleSolenoid.Value.kForward);
       }
-    if(driverJoystick.getRawButton(2)){
-        elevateSolenoid.set(DoubleSolenoid.Value.kForward);
-      // wheelsSolenoid.set(DoubleSolenoid.Value.k)
+    else{
+        //elevateSolenoid.set(DoubleSolenoid.Value.kReverse);
+         wheelsSolenoid.set(DoubleSolenoid.Value.kForward);
       } 
 
-
-    //cambio velocidad
-    if(driverJoystick.getRawButton(3)){
-      cambioVelocidad.set(DoubleSolenoid.Value.kReverse);
+    if(elevateSolenoides == true){
+      elevateSolenoid.set(DoubleSolenoid.Value.kReverse);
     }
-    if(driverJoystick.getRawButton(4)){
+    else{
+      elevateSolenoid.set(DoubleSolenoid.Value.kForward);
+    }
+
+    if(driverJoystick.getRawButton(3)){
       cambioVelocidad.set(DoubleSolenoid.Value.kForward);
     }
+
+    if(driverJoystick.getRawButton(4)){
+      cambioVelocidad.set(DoubleSolenoid.Value.kReverse);
+    }
+
 
 
     long time2 = Calendar.getInstance().getTimeInMillis();
@@ -159,6 +180,33 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Raw value ", raw);
     SmartDashboard.putNumber("Rater ", rate);
     SmartDashboard.putBoolean("Stopped ", stopped);
+
+//transmision encoders
+    int countRight = encoderRight.get();
+    double rawRight = encoderRight.getRaw();
+    double distanceRight = encoderRight.getDistance();
+    double rateRight = encoderRight.getRate();
+    boolean stoppedRight = encoderRight.getStopped();
+
+
+    SmartDashboard.putNumber("count ", countRight);
+    SmartDashboard.putNumber("Distance ", distanceRight);
+    SmartDashboard.putNumber("Raw value ", rawRight);
+    SmartDashboard.putNumber("Rater ", rateRight);
+    SmartDashboard.putBoolean("Stopped ", stoppedRight);
+
+    int countLeft = encoderLeft.get();
+    double rawLeft = encoderLeft.getRaw();
+    double distanceLeft = encoderLeft.getDistance();
+    double rateLeft = encoderLeft.getRate();
+    boolean stoppedLeft = encoderLeft.getStopped();
+
+
+    SmartDashboard.putNumber("Left count ", countLeft);
+    SmartDashboard.putNumber("Left Distance ", distanceLeft);
+    SmartDashboard.putNumber("Left Raw value ", rawLeft);
+    SmartDashboard.putNumber("Left Rater ", rateLeft);
+    SmartDashboard.putBoolean("Left Stopped ", stoppedLeft);
 
     double upDownArm = armJoystick.getRawAxis(RIGHT_JOYSTICK) * 0.5;
     if(!PIDEnabled) armTalon.set(ControlMode.PercentOutput, upDownArm);
